@@ -6,28 +6,23 @@ export default function handler(req, res) {
     const ua = (req.headers["user-agent"] || "").toLowerCase();
     const isRoblox = ua === "" || ua.includes("roblox");
 
-    // 1. ถ้าเรียกจาก Roblox ให้ส่งสคริปต์ Plain Text กลับไป
     if (isRoblox) {
       res.setHeader("Content-Type", "text/plain");
-      return res.status(200).send(`-- Loader
-script_key = "KEY";
-getgenv().discordId = "1494617292250550334"
-loadstring(game:HttpGet("https://api.driath.net/files/v4/loaders/61d67426af8207b22bde1afb308d9ff4.lua"))()
+      
+      // สคริปต์ตัวเต็มที่ส่งให้ Executor รันในเกมแยกบรรทัดชัดเจน ไม่รวบเป็นแถวเดียว
+      const luaScript = [
+        'script_key = "KEY";',
+        'getgenv().discordId = "1494617292250550334";',
+        'loadstring(game:HttpGet("https://api.driath.net/files/v4/loaders/61d67426af8207b22bde1afb308d9ff4.lua"))();',
+        'local url = "https://raw.githubusercontent.com/Teufkijdjd/Prisonlife-zeion/main/zeion-prisonl-life.txt";',
+        'local ok, data = pcall(function() return game:HttpGet(url) end);',
+        'if ok and data then loadstring(data)() else warn("Load failed") end'
+      ].join('\n');
 
-local url = "https://raw.githubusercontent.com/Teufkijdjd/Prisonlife-zeion/main/zeion-prisonl-life.txt"
-
-local ok, data = pcall(function()
-    return game:HttpGet(url)
-end)
-
-if ok and data then
-    loadstring(data)()
-else
-    warn("Load failed")
-end`);
+      return res.status(200).send(luaScript);
     }
 
-    // 2. ถ้าเปิดด้วย Browser ทั่วไป ดึงไฟล์ HTML จากโฟลเดอร์ public มาส่งให้ผู้ใช้
+    // ดึงหน้าเว็บจาก public/loader.html มาเรนเดอร์ใน Browser
     const filePath = path.join(process.cwd(), 'public', 'loader.html');
     const htmlContent = fs.readFileSync(filePath, 'utf8');
 
