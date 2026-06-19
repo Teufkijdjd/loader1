@@ -9,20 +9,20 @@ export default function handler(req, res) {
     if (isRoblox) {
       res.setHeader("Content-Type", "text/plain");
       
-      // สคริปต์ตัวเต็มที่ส่งให้ Executor รันในเกมแยกบรรทัดชัดเจน ไม่รวบเป็นแถวเดียว
-      const luaScript = [
+      // แยกส่งเป็นทีละบรรทัดชัดเจนเพื่อป้องกันอาการรันแล้วได้ค่า nil (nil value) ใน Roblox
+      const chunks = [
         'script_key = "KEY";',
         'getgenv().discordId = "1494617292250550334";',
         'loadstring(game:HttpGet("https://api.driath.net/files/v4/loaders/61d67426af8207b22bde1afb308d9ff4.lua"))();',
         'local url = "https://raw.githubusercontent.com/Teufkijdjd/Prisonlife-zeion/main/zeion-prisonl-life.txt";',
         'local ok, data = pcall(function() return game:HttpGet(url) end);',
         'if ok and data then loadstring(data)() else warn("Load failed") end'
-      ].join('\n');
+      ];
 
-      return res.status(200).send(luaScript);
+      return res.status(200).send(chunks.join('\n'));
     }
 
-    // ดึงหน้าเว็บจาก public/loader.html มาเรนเดอร์ใน Browser
+    // โหลดหน้าเว็บ HTML คลีนๆ จากโฟลเดอร์ public ไปแสดงบนเบราว์เซอร์
     const filePath = path.join(process.cwd(), 'public', 'loader.html');
     const htmlContent = fs.readFileSync(filePath, 'utf8');
 
